@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm:*)",
+      "Bash(mkdir:*)",
+      "Bash(python -m pylint:*)",
+      "Bash(python3 -m pylint:*)",
+      "Bash(pip3 install:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(python3:*)",
+      "Bash(sudo apt:*)",
+      "Bash(sudo apt install:*)",
+      "Bash(pip3:*)",
+      "Bash(pip --version)",
+      "Bash(venv-wsl/bin/python:*)",
+      "Bash(python -m pytest tests/test_roles.py -v)",
+      "Bash(python -m pytest tests/test_roles.py::RoleEnumTestCase::test_user_role_values -v)",
+      "Bash(PYTHONPATH=/mnt/d/home/techn/Documents/GitHub/bottled-secrets venv-wsl/bin/python -c \"from app.auth.roles import UserRole; print('Role system working:', UserRole.USER_ADMINISTRATOR.value)\")"
+    ],
+    "deny": []
+  }
+}

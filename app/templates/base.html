@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if title %}
+            {{ title }} - Bottled Secrets
+        {% else %}
+            Bottled Secrets
+        {% endif %}
+    </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="{{ url_for('main.index') }}" class="navbar-brand">Bottled Secrets</a>
+            <div class="navbar-nav">
+                {% if session.authenticated %}
+                    {% if session.user.roles and 'user_administrator' in session.user.roles %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="navbar-link">Admin</a>
+                    {% endif %}
+                    <span class="navbar-text">Welcome, {{ session.user.name }}</span>
+                    <a href="{{ url_for('auth.logout') }}" class="navbar-link">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login', provider='google') }}" class="navbar-link">Sign In</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

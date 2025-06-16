@@ -1,0 +1,113 @@
+{% extends "admin/base.html" %}
+
+{% block admin_title %}Dashboard{% endblock %}
+
+{% block admin_content %}
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="dashboard-card-header">
+            <h3>System Overview</h3>
+        </div>
+        <div class="dashboard-card-content">
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.total_users }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.administrators }}</div>
+                <div class="stat-label">Administrators</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.regular_users }}</div>
+                <div class="stat-label">Regular Users</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-card">
+        <div class="dashboard-card-header">
+            <h3>Quick Actions</h3>
+        </div>
+        <div class="dashboard-card-content">
+            <div class="quick-actions">
+                <a href="{{ url_for('admin.list_users') }}" class="action-button">
+                    <span class="action-icon">👥</span>
+                    <span class="action-text">Manage Users</span>
+                </a>
+                <a href="{{ url_for('admin.list_users') }}" class="action-button">
+                    <span class="action-icon">🔐</span>
+                    <span class="action-text">Assign Roles</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-card wide">
+        <div class="dashboard-card-header">
+            <h3>Recent Users</h3>
+        </div>
+        <div class="dashboard-card-content">
+            {% if stats.recent_users %}
+                <div class="recent-users-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Roles</th>
+                                <th>Last Seen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in stats.recent_users %}
+                            <tr>
+                                <td>{{ user.name }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% for role in user.role_display %}
+                                        <span class="role-badge {{ 'admin' if user.is_admin else 'user' }}">{{ role }}</span>
+                                    {% endfor %}
+                                </td>
+                                <td>{{ user.last_seen[:19] if user.last_seen else 'Never' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="no-data">No recent users found.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="dashboard-card">
+        <div class="dashboard-card-header">
+            <h3>Role Distribution</h3>
+        </div>
+        <div class="dashboard-card-content">
+            <div class="role-stats">
+                <div class="role-stat">
+                    <div class="role-stat-bar">
+                        <div class="role-stat-fill admin" style="width: {{ (stats.administrators / stats.total_users * 100) if stats.total_users > 0 else 0 }}%"></div>
+                    </div>
+                    <div class="role-stat-label">Administrators ({{ stats.administrators }})</div>
+                </div>
+                <div class="role-stat">
+                    <div class="role-stat-bar">
+                        <div class="role-stat-fill user" style="width: {{ (stats.regular_users / stats.total_users * 100) if stats.total_users > 0 else 0 }}%"></div>
+                    </div>
+                    <div class="role-stat-label">Regular Users ({{ stats.regular_users }})</div>
+                </div>
+                {% if stats.guest_users > 0 %}
+                <div class="role-stat">
+                    <div class="role-stat-bar">
+                        <div class="role-stat-fill guest" style="width: {{ (stats.guest_users / stats.total_users * 100) if stats.total_users > 0 else 0 }}%"></div>
+                    </div>
+                    <div class="role-stat-label">Guests ({{ stats.guest_users }})</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

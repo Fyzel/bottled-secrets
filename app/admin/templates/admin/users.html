@@ -1,0 +1,142 @@
+{% extends "admin/base.html" %}
+
+{% block admin_title %}User Management{% endblock %}
+
+{% block admin_breadcrumb %}/ Users{% endblock %}
+
+{% block admin_content %}
+<div class="users-container">
+    <div class="users-header">
+        <h2>System Users</h2>
+        <div class="users-stats">
+            <span class="user-count">{{ users|length }} total users</span>
+        </div>
+    </div>
+    
+    <div class="users-table-container">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Provider</th>
+                    <th>Roles</th>
+                    <th>Last Seen</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr class="user-row {{ 'current-user' if user.email == current_user.email }}">
+                    <td class="user-info">
+                        <div class="user-avatar">
+                            {{ user.name[0].upper() }}
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">{{ user.name }}</div>
+                            {% if user.is_admin %}
+                                <div class="user-admin-badge">Administrator</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="user-email">{{ user.email }}</td>
+                    <td class="user-provider">
+                        <span class="provider-badge {{ user.provider }}">{{ user.provider.title() }}</span>
+                    </td>
+                    <td class="user-roles">
+                        {% for role in user.role_display %}
+                            <span class="role-badge {{ 'admin' if user.is_admin else 'user' }}">{{ role }}</span>
+                        {% endfor %}
+                    </td>
+                    <td class="user-last-seen">
+                        {{ user.last_seen[:19] if user.last_seen else 'Never' }}
+                    </td>
+                    <td class="user-actions">
+                        <div class="action-buttons">
+                            <button class="btn btn-small btn-primary" onclick="showRoleModal('{{ user.email }}', '{{ user.name }}')">
+                                Manage Roles
+                            </button>
+                            <a href="{{ url_for('admin.user_details', email=user.email) }}" class="btn btn-small btn-secondary">
+                                Details
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Role Management Modal -->
+<div id="roleModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Manage User Roles</h3>
+            <span class="modal-close" onclick="closeRoleModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="role-user-info">
+                <p>Managing roles for: <strong id="roleUserName"></strong></p>
+                <p>Email: <strong id="roleUserEmail"></strong></p>
+            </div>
+            
+            <div class="role-section">
+                <h4>Assign Role</h4>
+                <form method="POST" action="{{ url_for('admin.assign_role') }}" class="role-form">
+                    <input type="hidden" name="target_email" id="assignEmail">
+                    <div class="form-group">
+                        <label for="assignRole">Select Role:</label>
+                        <select name="role" id="assignRole" class="form-control" required>
+                            <option value="">Choose a role...</option>
+                            {% for role in role_choices %}
+                                <option value="{{ role.value }}">{{ role.display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Assign Role</button>
+                </form>
+            </div>
+            
+            <div class="role-section">
+                <h4>Remove Role</h4>
+                <form method="POST" action="{{ url_for('admin.remove_role') }}" class="role-form">
+                    <input type="hidden" name="target_email" id="removeEmail">
+                    <div class="form-group">
+                        <label for="removeRole">Select Role to Remove:</label>
+                        <select name="role" id="removeRole" class="form-control" required>
+                            <option value="">Choose a role...</option>
+                            {% for role in role_choices %}
+                                <option value="{{ role.value }}">{{ role.display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Remove Role</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showRoleModal(email, name) {
+    document.getElementById('roleUserEmail').textContent = email;
+    document.getElementById('roleUserName').textContent = name;
+    document.getElementById('assignEmail').value = email;
+    document.getElementById('removeEmail').value = email;
+    document.getElementById('roleModal').style.display = 'block';
+}
+
+function closeRoleModal() {
+    document.getElementById('roleModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('roleModal');
+    if (event.target === modal) {
+        closeRoleModal();
+    }
+}
+</script>
+{% endblock %}

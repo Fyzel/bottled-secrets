@@ -1,0 +1,197 @@
+{% extends "admin/base.html" %}
+
+{% block admin_title %}User Details{% endblock %}
+
+{% block admin_breadcrumb %}/ <a href="{{ url_for('admin.list_users') }}">Users</a> / {{ user_data.name }}{% endblock %}
+
+{% block admin_content %}
+<div class="user-details-container">
+    <div class="user-profile-card">
+        <div class="user-profile-header">
+            <div class="user-profile-avatar">
+                {{ user_data.name[0].upper() }}
+            </div>
+            <div class="user-profile-info">
+                <h2>{{ user_data.name }}</h2>
+                <p class="user-email">{{ user_data.email }}</p>
+                {% if user_data.is_admin %}
+                    <span class="admin-badge">Administrator</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="user-profile-details">
+            <div class="detail-row">
+                <label>Provider:</label>
+                <span class="provider-badge {{ user_data.provider }}">{{ user_data.provider.title() }}</span>
+            </div>
+            <div class="detail-row">
+                <label>Last Authentication:</label>
+                <span>{{ user_data.authenticated_at[:19] if user_data.authenticated_at else 'Never' }}</span>
+            </div>
+            <div class="detail-row">
+                <label>Last Seen:</label>
+                <span>{{ user_data.last_seen[:19] if user_data.last_seen else 'Never' }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="user-roles-card">
+        <div class="card-header">
+            <h3>Assigned Roles</h3>
+        </div>
+        <div class="card-content">
+            {% if user_roles %}
+                <div class="roles-list">
+                    {% for role in user_roles %}
+                        <div class="role-item">
+                            <div class="role-info">
+                                <span class="role-name">{{ role.name.replace('_', ' ').title() }}</span>
+                                <span class="role-description">
+                                    {% if role.name == 'USER_ADMINISTRATOR' %}
+                                        Can manage users and assign roles
+                                    {% elif role.name == 'REGULAR_USER' %}
+                                        Standard user access
+                                    {% elif role.name == 'GUEST' %}
+                                        Limited access
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="role-actions">
+                                {% if current_user.email != user_data.email or role.name != 'USER_ADMINISTRATOR' %}
+                                    <form method="POST" action="{{ url_for('admin.remove_role') }}" style="display: inline;">
+                                        <input type="hidden" name="target_email" value="{{ user_data.email }}">
+                                        <input type="hidden" name="role" value="{{ role.value }}">
+                                        <button type="submit" class="btn btn-small btn-danger" 
+                                                onclick="return confirm('Remove {{ role.name.replace('_', ' ').title() }} role from {{ user_data.name }}?')">
+                                            Remove
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="no-roles">No roles assigned to this user.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="user-permissions-card">
+        <div class="card-header">
+            <h3>Effective Permissions</h3>
+        </div>
+        <div class="card-content">
+            <div class="permissions-list">
+                {% set permissions = [] %}
+                {% for role in user_roles %}
+                    {% if role.name == 'USER_ADMINISTRATOR' %}
+                        {% set _ = permissions.extend(['Manage Users', 'Manage Roles', 'View Admin Panel', 'View User List', 'Access Secrets']) %}
+                    {% elif role.name == 'REGULAR_USER' %}
+                        {% set _ = permissions.append('Access Secrets') %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% if permissions %}
+                    {% for permission in permissions|unique %}
+                        <div class="permission-item">
+                            <span class="permission-icon">✓</span>
+                            <span class="permission-name">{{ permission }}</span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-permissions">No special permissions assigned.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="user-actions-card">
+        <div class="card-header">
+            <h3>User Actions</h3>
+        </div>
+        <div class="card-content">
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="showRoleModal('{{ user_data.email }}', '{{ user_data.name }}')">
+                    Manage Roles
+                </button>
+                <a href="{{ url_for('admin.list_users') }}" class="btn btn-secondary">
+                    Back to Users
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Management Modal (same as in users.html) -->
+<div id="roleModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Manage User Roles</h3>
+            <span class="modal-close" onclick="closeRoleModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="role-user-info">
+                <p>Managing roles for: <strong id="roleUserName"></strong></p>
+                <p>Email: <strong id="roleUserEmail"></strong></p>
+            </div>
+            
+            <div class="role-section">
+                <h4>Assign Role</h4>
+                <form method="POST" action="{{ url_for('admin.assign_role') }}" class="role-form">
+                    <input type="hidden" name="target_email" id="assignEmail">
+                    <div class="form-group">
+                        <label for="assignRole">Select Role:</label>
+                        <select name="role" id="assignRole" class="form-control" required>
+                            <option value="">Choose a role...</option>
+                            <option value="user_administrator">User Administrator</option>
+                            <option value="regular_user">Regular User</option>
+                            <option value="guest">Guest</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Assign Role</button>
+                </form>
+            </div>
+            
+            <div class="role-section">
+                <h4>Remove Role</h4>
+                <form method="POST" action="{{ url_for('admin.remove_role') }}" class="role-form">
+                    <input type="hidden" name="target_email" id="removeEmail">
+                    <div class="form-group">
+                        <label for="removeRole">Select Role to Remove:</label>
+                        <select name="role" id="removeRole" class="form-control" required>
+                            <option value="">Choose a role...</option>
+                            <option value="user_administrator">User Administrator</option>
+                            <option value="regular_user">Regular User</option>
+                            <option value="guest">Guest</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Remove Role</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showRoleModal(email, name) {
+    document.getElementById('roleUserEmail').textContent = email;
+    document.getElementById('roleUserName').textContent = name;
+    document.getElementById('assignEmail').value = email;
+    document.getElementById('removeEmail').value = email;
+    document.getElementById('roleModal').style.display = 'block';
+}
+
+function closeRoleModal() {
+    document.getElementById('roleModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('roleModal');
+    if (event.target === modal) {
+        closeRoleModal();
+    }
+}
+</script>
+{% endblock %}
