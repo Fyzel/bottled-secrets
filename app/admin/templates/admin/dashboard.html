@@ -68,7 +68,7 @@
                                         <span class="role-badge {{ 'admin' if user.is_admin else 'user' }}">{{ role }}</span>
                                     {% endfor %}
                                 </td>
-                                <td>{{ user.last_seen[:19] if user.last_seen else 'Never' }}</td>
+                                <td>{{ user.last_seen | datetime_friendly }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

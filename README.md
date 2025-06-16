@@ -87,12 +87,24 @@ bottled-secrets/
    # Edit .env with your SAML and database settings
    ```
 
-4. **Run Application**
+4. **Set Environment Variables**
    ```bash
-   flask run
+   # For development
+   export FLASK_ENV=development
+   export FLASK_DEBUG=true
+   
+   # For production (CRITICAL: Never enable debug in production!)
+   export FLASK_ENV=production
+   export FLASK_DEBUG=false
    ```
 
-5. **Access Admin Panel**
+5. **Run Application**
+   ```bash
+   flask run
+   # Or run directly: python app.py
+   ```
+
+6. **Access Admin Panel**
    - Navigate to `/admin` (requires User Administrator role)
    - Sign in via SAML provider
    - Manage users and roles
@@ -131,6 +143,38 @@ mypy app/
 # Format code
 black app/ tests/
 ```
+
+## Security Considerations
+
+⚠️ **Critical Security Settings**
+
+### Debug Mode
+- **Development**: `FLASK_DEBUG=true` is acceptable for local development
+- **Production**: `FLASK_DEBUG=false` must ALWAYS be set in production
+- **Why**: Debug mode exposes sensitive information, allows code execution via browser, and reveals application internals
+
+### Environment Configuration
+```bash
+# ✅ Secure Production Configuration
+export FLASK_ENV=production
+export FLASK_DEBUG=false
+export SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex())')
+
+# ❌ Insecure Configuration (Development Only!)
+export FLASK_ENV=development  
+export FLASK_DEBUG=true
+export SECRET_KEY=dev-secret-key-change-in-production
+```
+
+### Production Deployment Checklist
+- [ ] `FLASK_DEBUG=false` 
+- [ ] Strong `SECRET_KEY` (64+ random characters)
+- [ ] HTTPS enabled for all endpoints
+- [ ] Database credentials secured
+- [ ] SAML certificates properly configured
+- [ ] Error logging configured (not displayed to users)
+- [ ] Rate limiting implemented
+- [ ] CSRF protection enabled (Flask-WTF)
 
 ## The Claude Code Experiment
 

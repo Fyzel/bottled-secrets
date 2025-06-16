@@ -27,11 +27,11 @@
             </div>
             <div class="detail-row">
                 <label>Last Authentication:</label>
-                <span>{{ user_data.authenticated_at[:19] if user_data.authenticated_at else 'Never' }}</span>
+                <span>{{ user_data.authenticated_at | datetime_friendly }}</span>
             </div>
             <div class="detail-row">
                 <label>Last Seen:</label>
-                <span>{{ user_data.last_seen[:19] if user_data.last_seen else 'Never' }}</span>
+                <span>{{ user_data.last_seen | datetime_friendly }}</span>
             </div>
         </div>
     </div>

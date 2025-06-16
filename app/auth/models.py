@@ -200,11 +200,11 @@ class User:
     def logout() -> None:
         """Clear user session and logout.
 
-        Removes all authentication-related data from the session.
+        Removes only authentication-related data from the session,
+        preserving other session data that may be useful.
         """
         session.pop('user', None)
         session.pop('authenticated', None)
-        session.clear()
 
     def is_authenticated(self) -> bool:
         """Check if user is authenticated.

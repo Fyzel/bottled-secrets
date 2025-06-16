@@ -18,6 +18,7 @@ Example:
 """
 
 from typing import Type
+from datetime import datetime
 from flask import Flask
 from config.config import Config
 
@@ -53,6 +54,55 @@ def create_app(config_class: Type[Config] = Config) -> Flask:
     # Validate configuration
     if not app.config.get('SECRET_KEY'):
         raise ValueError("SECRET_KEY must be set in configuration")
+    
+    # Register template filters
+    @app.template_filter('strftime')
+    def strftime_filter(value: str, format_string: str = '%Y-%m-%d %H:%M:%S') -> str:
+        """Format a datetime string using strftime.
+        
+        :param value: The datetime string to format
+        :type value: str
+        :param format_string: The format string to use
+        :type format_string: str
+        :returns: Formatted datetime string
+        :rtype: str
+        """
+        if not value:
+            return ''
+        try:
+            # Parse ISO format datetime string
+            if 'T' in value:
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            else:
+                dt = datetime.fromisoformat(value)
+            return dt.strftime(format_string)
+        except (ValueError, AttributeError):
+            # If parsing fails, return original value
+            return value
+    
+    @app.template_filter('datetime_friendly')
+    def datetime_friendly_filter(value: str) -> str:
+        """Format a datetime string in a user-friendly format.
+        
+        :param value: The datetime string to format
+        :type value: str
+        :returns: User-friendly datetime string
+        :rtype: str
+        """
+        if not value:
+            return 'Never'
+        try:
+            # Parse ISO format datetime string
+            if 'T' in value:
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            else:
+                dt = datetime.fromisoformat(value)
+            
+            # Format as "Dec 15, 2024 at 2:30 PM"
+            return dt.strftime('%b %d, %Y at %I:%M %p')
+        except (ValueError, AttributeError):
+            # If parsing fails, return original value truncated
+            return value[:19] if len(value) > 19 else value
     
     # Register blueprints
     from app.main import bp as main_bp  # pylint: disable=import-outside-toplevel

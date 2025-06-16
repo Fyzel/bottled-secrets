@@ -18,9 +18,17 @@ Example:
         $ flask run
 """
 
+import os
 from app import create_app
+from config.config import CONFIG_MAP
 
-app = create_app()  # pylint: disable=invalid-name
+# Get configuration from environment or default to development
+config_name = os.environ.get('FLASK_ENV', 'development')
+config_class = CONFIG_MAP.get(config_name, CONFIG_MAP['default'])
+
+app = create_app(config_class)  # pylint: disable=invalid-name
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Use debug setting from configuration, not hardcoded
+    debug_mode = app.config.get('DEBUG', False)
+    app.run(debug=debug_mode)
