@@ -109,6 +109,61 @@ bottled-secrets/
    - Sign in via SAML provider
    - Manage users and roles
 
+## SAML Identity Provider Integration
+
+This application supports SAML 2.0 authentication with Google Workspace and Microsoft Azure AD.
+
+📋 **[Complete SAML Setup Guide](docs/SAML_SETUP.md)** - Detailed step-by-step instructions
+
+### Quick Setup Overview
+
+**For Google Workspace:**
+1. Create custom SAML app in Google Admin Console
+2. Configure ACS URL: `https://your-domain.com/auth/acs`
+3. Set Entity ID: `https://your-domain.com/auth/metadata`
+4. Map email and name attributes
+5. Update environment variables with Google's certificate and URLs
+
+**For Microsoft Azure AD:**
+1. Create enterprise application in Azure Portal
+2. Configure SAML single sign-on
+3. Set same ACS URL and Entity ID as above
+4. Configure user claims and attributes
+5. Update environment variables with Azure's certificate and tenant info
+
+### Required Environment Variables
+
+```bash
+# Google Workspace
+GOOGLE_SAML_SP_ENTITY_ID=https://your-domain.com/auth/metadata
+GOOGLE_SAML_SP_ACS_URL=https://your-domain.com/auth/acs
+GOOGLE_SAML_IDP_ENTITY_ID=https://accounts.google.com/o/saml2?idpid=YOUR_IDP_ID
+GOOGLE_SAML_IDP_SSO_URL=https://accounts.google.com/o/saml2/idp?idpid=YOUR_IDP_ID
+GOOGLE_SAML_IDP_X509_CERT="-----BEGIN CERTIFICATE-----..."
+
+# Microsoft Azure AD
+AZURE_SAML_SP_ENTITY_ID=https://your-domain.com/auth/metadata
+AZURE_SAML_SP_ACS_URL=https://your-domain.com/auth/acs
+AZURE_SAML_IDP_ENTITY_ID=https://sts.windows.net/TENANT_ID/
+AZURE_SAML_IDP_SSO_URL=https://login.microsoftonline.com/TENANT_ID/saml2
+AZURE_SAML_IDP_X509_CERT="-----BEGIN CERTIFICATE-----..."
+```
+
+### Authentication URLs
+
+Once configured, users can authenticate via:
+- **Google**: `https://your-domain.com/auth/login/google`
+- **Azure**: `https://your-domain.com/auth/login/azure`
+
+### Troubleshooting
+
+Common issues and solutions are covered in the [detailed setup guide](docs/SAML_SETUP.md), including:
+- Certificate format problems
+- Clock synchronization issues  
+- URL mismatch errors
+- Attribute mapping problems
+- Network connectivity issues
+
 ## Administration Access
 
 Only users with the **User Administrator** role can access admin functions:
