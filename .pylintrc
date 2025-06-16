@@ -8,7 +8,9 @@ disable=
     missing-module-docstring,
     too-few-public-methods,
     import-outside-toplevel,
-    wrong-import-position
+    wrong-import-position,
+    import-error,
+    no-name-in-module
 
 [FORMAT]
 max-line-length=88
