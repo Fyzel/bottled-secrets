@@ -26,5 +26,5 @@ isort==6.0.1
 mypy==1.16.0
 
 # Testing (basic)
-pytest==8.4.0
+pytest==8.4.1
 pytest-flask==1.3.0
