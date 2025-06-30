@@ -11,7 +11,7 @@ blinker==1.9.0
 itsdangerous==2.2.0
 
 # Configuration and environment
-python-dotenv==1.1.0
+python-dotenv==1.1.1
 
 # Database (SQLAlchemy and PyMySQL only - excluding mariadb)
 SQLAlchemy==2.0.41
