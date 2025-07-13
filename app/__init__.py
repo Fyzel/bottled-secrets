@@ -21,8 +21,9 @@ from typing import Type
 from datetime import datetime
 from flask import Flask
 from config.config import Config
+from app.models import db
 
-__all__ = ['create_app']
+__all__ = ["create_app"]
 
 
 def create_app(config_class: Type[Config] = Config) -> Flask:
@@ -50,16 +51,19 @@ def create_app(config_class: Type[Config] = Config) -> Flask:
     """
     app = Flask(__name__)
     app.config.from_object(config_class)
-    
+
     # Validate configuration
-    if not app.config.get('SECRET_KEY'):
+    if not app.config.get("SECRET_KEY"):
         raise ValueError("SECRET_KEY must be set in configuration")
-    
+
+    # Initialize database
+    db.init_app(app)
+
     # Register template filters
-    @app.template_filter('strftime')
-    def strftime_filter(value: str, format_string: str = '%Y-%m-%d %H:%M:%S') -> str:
+    @app.template_filter("strftime")
+    def strftime_filter(value: str, format_string: str = "%Y-%m-%d %H:%M:%S") -> str:
         """Format a datetime string using strftime.
-        
+
         :param value: The datetime string to format
         :type value: str
         :param format_string: The format string to use
@@ -68,50 +72,57 @@ def create_app(config_class: Type[Config] = Config) -> Flask:
         :rtype: str
         """
         if not value:
-            return ''
+            return ""
         try:
             # Parse ISO format datetime string
-            if 'T' in value:
-                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            if "T" in value:
+                dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
             else:
                 dt = datetime.fromisoformat(value)
             return dt.strftime(format_string)
         except (ValueError, AttributeError):
             # If parsing fails, return original value
             return value
-    
-    @app.template_filter('datetime_friendly')
+
+    @app.template_filter("datetime_friendly")
     def datetime_friendly_filter(value: str) -> str:
         """Format a datetime string in a user-friendly format.
-        
+
         :param value: The datetime string to format
         :type value: str
         :returns: User-friendly datetime string
         :rtype: str
         """
         if not value:
-            return 'Never'
+            return "Never"
         try:
             # Parse ISO format datetime string
-            if 'T' in value:
-                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            if "T" in value:
+                dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
             else:
                 dt = datetime.fromisoformat(value)
-            
+
             # Format as "Dec 15, 2024 at 2:30 PM"
-            return dt.strftime('%b %d, %Y at %I:%M %p')
+            return dt.strftime("%b %d, %Y at %I:%M %p")
         except (ValueError, AttributeError):
             # If parsing fails, return original value truncated
             return value[:19] if len(value) > 19 else value
-    
+
     # Register blueprints
     from app.main import bp as main_bp  # pylint: disable=import-outside-toplevel
+
     app.register_blueprint(main_bp)
-    
+
     from app.auth import bp as auth_bp  # pylint: disable=import-outside-toplevel
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-    
+
+    app.register_blueprint(auth_bp, url_prefix="/auth")
+
     from app.admin import bp as admin_bp  # pylint: disable=import-outside-toplevel
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    
+
+    app.register_blueprint(admin_bp, url_prefix="/admin")
+
+    from app.folders import bp as folders_bp  # pylint: disable=import-outside-toplevel
+
+    app.register_blueprint(folders_bp, url_prefix="/folders")
+
     return app
