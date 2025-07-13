@@ -10,14 +10,19 @@
             Bottled Secrets
         {% endif %}
     </title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/Bottled-Secrets.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="{{ url_for('main.index') }}" class="navbar-brand">Bottled Secrets</a>
+            <a href="{{ url_for('main.index') }}" class="navbar-brand">
+                <img src="{{ url_for('static', filename='images/Bottled-Secrets.png') }}" alt="Bottled Secrets" class="navbar-logo">
+                Bottled Secrets
+            </a>
             <div class="navbar-nav">
                 {% if session.authenticated %}
+                    <a href="{{ url_for('folders.index') }}" class="navbar-link">Folders</a>
                     {% if session.user.roles and 'user_administrator' in session.user.roles %}
                         <a href="{{ url_for('admin.dashboard') }}" class="navbar-link">Admin</a>
                     {% endif %}
@@ -29,7 +34,7 @@
             </div>
         </div>
     </nav>
-    
+
     <main class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -40,10 +45,10 @@
                 </div>
             {% endif %}
         {% endwith %}
-        
+
         {% block content %}{% endblock %}
     </main>
-    
+
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

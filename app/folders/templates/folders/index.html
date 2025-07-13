@@ -1,0 +1,553 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="folders-container">
+    <div class="folders-header">
+        <h1>🔐 Secret Folders</h1>
+        <button id="createFolderBtn" class="btn btn-primary">
+            <i class="icon-plus"></i>
+            Create Folder
+        </button>
+    </div>
+
+    <div class="folders-breadcrumb">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active">Root</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="folders-grid" id="foldersGrid">
+        <!-- Folders will be loaded here via JavaScript -->
+        <div class="loading">Loading folders...</div>
+    </div>
+
+    <!-- Create Folder Modal -->
+    <div id="createFolderModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Folder</h2>
+                <button type="button" class="modal-close">&times;</button>
+            </div>
+            <form id="createFolderForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="folderName">Folder Name *</label>
+                        <input type="text" id="folderName" name="name" required
+                               placeholder="Enter folder name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="folderPath">Folder Path *</label>
+                        <input type="text" id="folderPath" name="path" required
+                               placeholder="/path/to/folder" pattern="^/.*">
+                        <small class="form-help">Path must start with "/" and be unique</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="folderIcon">Icon</label>
+                        <select id="folderIcon" name="icon">
+                            <option value="folder">📁 Folder</option>
+                            <option value="folder-key">🔐 Key Folder</option>
+                            <option value="folder-config">⚙️ Configuration</option>
+                            <option value="folder-database">🗃️ Database</option>
+                            <option value="folder-api">🌐 API</option>
+                            <option value="folder-dev">💻 Development</option>
+                            <option value="folder-prod">🏭 Production</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="folderDescription">Description</label>
+                        <textarea id="folderDescription" name="description" rows="3"
+                                  placeholder="Optional description for this folder"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="parentFolder">Parent Folder</label>
+                        <select id="parentFolder" name="parent_id">
+                            <option value="">Root (No Parent)</option>
+                            <!-- Parent folders will be populated via JavaScript -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelCreateFolder">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Folder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Folder Details Modal -->
+    <div id="folderModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="folderModalTitle">Folder Details</h2>
+                <button type="button" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="folder-details">
+                    <div class="folder-info">
+                        <div class="folder-icon-large" id="folderIconLarge">📁</div>
+                        <div class="folder-meta">
+                            <h3 id="folderName"></h3>
+                            <p id="folderPath" class="text-muted"></p>
+                            <p id="folderDescription"></p>
+                            <div class="folder-stats">
+                                <span id="folderStats" class="text-small"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="folder-actions">
+                        <button id="addSecretBtn" class="btn btn-success">
+                            <i class="icon-plus"></i> Add Secret
+                        </button>
+                        <button id="manageFolderPermissionsBtn" class="btn btn-info">
+                            <i class="icon-users"></i> Manage Access
+                        </button>
+                    </div>
+                </div>
+
+                <div class="folder-contents">
+                    <div class="tabs">
+                        <button class="tab-button active" data-tab="secrets">Secrets</button>
+                        <button class="tab-button" data-tab="subfolders">Subfolders</button>
+                    </div>
+
+                    <div id="secretsTab" class="tab-content active">
+                        <div class="secrets-list" id="secretsList">
+                            <!-- Secrets will be loaded here -->
+                        </div>
+                    </div>
+
+                    <div id="subfoldersTab" class="tab-content">
+                        <div class="subfolders-list" id="subfoldersList">
+                            <!-- Subfolders will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Secret Modal -->
+    <div id="addSecretModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Secret</h2>
+                <button type="button" class="modal-close">&times;</button>
+            </div>
+            <form id="addSecretForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="secretName">Secret Name *</label>
+                        <input type="text" id="secretName" name="name" required
+                               placeholder="e.g., api_key, database_password">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="secretValue">Secret Value *</label>
+                        <textarea id="secretValue" name="value" required rows="4"
+                                  placeholder="Enter the secret value"></textarea>
+                        <small class="form-help">This value will be encrypted when stored</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="secretDescription">Description</label>
+                        <textarea id="secretDescription" name="description" rows="2"
+                                  placeholder="Optional description for this secret"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelAddSecret">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Secret</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Permissions Modal -->
+    <div id="permissionsModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Manage Folder Access</h2>
+                <button type="button" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="permissions-header">
+                    <h3 id="permissionsFolderName"></h3>
+                    <button id="grantAccessBtn" class="btn btn-primary">
+                        <i class="icon-plus"></i> Grant Access
+                    </button>
+                </div>
+
+                <div class="permissions-list" id="permissionsList">
+                    <!-- Permissions will be loaded here -->
+                </div>
+
+                <!-- Grant Access Form -->
+                <div id="grantAccessForm" class="grant-access-form" style="display: none;">
+                    <form id="grantPermissionForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="userEmail">User Email</label>
+                                <input type="email" id="userEmail" name="user_email" required
+                                       placeholder="user@example.com">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="accessType">Access Level</label>
+                                <select id="accessType" name="access_type" required>
+                                    <option value="read">Read Only</option>
+                                    <option value="write">Read/Write</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Grant</button>
+                                <button type="button" class="btn btn-secondary" id="cancelGrantAccess">Cancel</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// JavaScript for folder management functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const foldersApi = {
+        async loadFolders() {
+            try {
+                const response = await fetch('/folders/api/folders');
+                if (!response.ok) throw new Error('Failed to load folders');
+                return await response.json();
+            } catch (error) {
+                console.error('Error loading folders:', error);
+                return { folders: [], total: 0 };
+            }
+        },
+
+        async createFolder(formData) {
+            const response = await fetch('/folders/api/folders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to create folder');
+            }
+            return await response.json();
+        },
+
+        async getFolderDetails(folderId) {
+            const response = await fetch(`/folders/api/folders/${folderId}`);
+            if (!response.ok) throw new Error('Failed to load folder details');
+            return await response.json();
+        },
+
+        async createSecret(folderId, secretData) {
+            const response = await fetch(`/folders/api/folders/${folderId}/secrets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(secretData)
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to create secret');
+            }
+            return await response.json();
+        },
+
+        async getFolderPermissions(folderId) {
+            const response = await fetch(`/folders/api/folders/${folderId}/permissions`);
+            if (!response.ok) throw new Error('Failed to load permissions');
+            return await response.json();
+        },
+
+        async grantPermission(folderId, permissionData) {
+            const response = await fetch(`/folders/api/folders/${folderId}/permissions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(permissionData)
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to grant permission');
+            }
+            return await response.json();
+        }
+    };
+
+    let currentFolderId = null;
+
+    // Load folders on page load
+    loadFolders();
+
+    async function loadFolders() {
+        const grid = document.getElementById('foldersGrid');
+        const data = await foldersApi.loadFolders();
+
+        if (data.folders.length === 0) {
+            grid.innerHTML = '<div class="empty-state">No folders found. Create your first folder to get started.</div>';
+            return;
+        }
+
+        grid.innerHTML = data.folders.map(folder => `
+            <div class="folder-card" data-folder-id="${folder.id}">
+                <div class="folder-icon">${getIconEmoji(folder.icon)}</div>
+                <div class="folder-info">
+                    <h3 class="folder-name">${escapeHtml(folder.name)}</h3>
+                    <p class="folder-path">${escapeHtml(folder.path)}</p>
+                    <div class="folder-stats">
+                        <span>${folder.secrets_count} secrets</span>
+                        <span>${folder.children_count} subfolders</span>
+                        <span class="access-level">${folder.access_level}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        // Add click handlers
+        grid.querySelectorAll('.folder-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const folderId = parseInt(card.dataset.folderId);
+                openFolderDetails(folderId);
+            });
+        });
+    }
+
+    function getIconEmoji(icon) {
+        const iconMap = {
+            'folder': '📁',
+            'folder-key': '🔐',
+            'folder-config': '⚙️',
+            'folder-database': '🗃️',
+            'folder-api': '🌐',
+            'folder-dev': '💻',
+            'folder-prod': '🏭'
+        };
+        return iconMap[icon] || '📁';
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Modal handlers
+    const createFolderModal = document.getElementById('createFolderModal');
+    const folderModal = document.getElementById('folderModal');
+    const addSecretModal = document.getElementById('addSecretModal');
+    const permissionsModal = document.getElementById('permissionsModal');
+
+    // Create Folder Modal
+    document.getElementById('createFolderBtn').addEventListener('click', () => {
+        createFolderModal.style.display = 'block';
+    });
+
+    document.getElementById('createFolderForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+
+        if (data.parent_id === '') delete data.parent_id;
+
+        try {
+            await foldersApi.createFolder(data);
+            createFolderModal.style.display = 'none';
+            e.target.reset();
+            loadFolders();
+            showMessage('Folder created successfully', 'success');
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    });
+
+    // Close modals
+    document.querySelectorAll('.modal-close, #cancelCreateFolder, #cancelAddSecret, #cancelGrantAccess').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+        });
+    });
+
+    async function openFolderDetails(folderId) {
+        currentFolderId = folderId;
+        try {
+            const folder = await foldersApi.getFolderDetails(folderId);
+
+            document.getElementById('folderModalTitle').textContent = folder.name;
+            document.getElementById('folderName').textContent = folder.name;
+            document.getElementById('folderPath').textContent = folder.path;
+            document.getElementById('folderDescription').textContent = folder.description || 'No description';
+            document.getElementById('folderIconLarge').textContent = getIconEmoji(folder.icon);
+            document.getElementById('folderStats').textContent =
+                `${folder.secrets.length} secrets, ${folder.children.length} subfolders • Created by ${folder.created_by}`;
+
+            // Load secrets
+            const secretsList = document.getElementById('secretsList');
+            if (folder.secrets.length === 0) {
+                secretsList.innerHTML = '<div class="empty-state">No secrets in this folder</div>';
+            } else {
+                secretsList.innerHTML = folder.secrets.map(secret => `
+                    <div class="secret-item">
+                        <div class="secret-info">
+                            <h4 class="secret-name">${escapeHtml(secret.name)}</h4>
+                            <p class="secret-description">${escapeHtml(secret.description || 'No description')}</p>
+                            <small class="secret-meta">Created by ${escapeHtml(secret.created_by)} on ${new Date(secret.created_at).toLocaleDateString()}</small>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Load subfolders
+            const subfoldersList = document.getElementById('subfoldersList');
+            if (folder.children.length === 0) {
+                subfoldersList.innerHTML = '<div class="empty-state">No subfolders</div>';
+            } else {
+                subfoldersList.innerHTML = folder.children.map(subfolder => `
+                    <div class="subfolder-item" data-folder-id="${subfolder.id}">
+                        <div class="subfolder-icon">${getIconEmoji(subfolder.icon)}</div>
+                        <div class="subfolder-info">
+                            <h4 class="subfolder-name">${escapeHtml(subfolder.name)}</h4>
+                            <p class="subfolder-path">${escapeHtml(subfolder.path)}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add click handlers for subfolders
+                subfoldersList.querySelectorAll('.subfolder-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const subfolderId = parseInt(item.dataset.folderId);
+                        openFolderDetails(subfolderId);
+                    });
+                });
+            }
+
+            folderModal.style.display = 'block';
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    }
+
+    // Add secret functionality
+    document.getElementById('addSecretBtn').addEventListener('click', () => {
+        if (!currentFolderId) return;
+        addSecretModal.style.display = 'block';
+    });
+
+    document.getElementById('addSecretForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            await foldersApi.createSecret(currentFolderId, data);
+            addSecretModal.style.display = 'none';
+            e.target.reset();
+            openFolderDetails(currentFolderId); // Refresh folder details
+            showMessage('Secret added successfully', 'success');
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    });
+
+    // Manage permissions functionality
+    document.getElementById('manageFolderPermissionsBtn').addEventListener('click', async () => {
+        if (!currentFolderId) return;
+        try {
+            const data = await foldersApi.getFolderPermissions(currentFolderId);
+            document.getElementById('permissionsFolderName').textContent = data.folder.name;
+
+            const permissionsList = document.getElementById('permissionsList');
+            if (data.permissions.length === 0) {
+                permissionsList.innerHTML = '<div class="empty-state">No additional permissions granted</div>';
+            } else {
+                permissionsList.innerHTML = data.permissions.map(perm => `
+                    <div class="permission-item">
+                        <div class="permission-info">
+                            <strong>${escapeHtml(perm.user_email)}</strong>
+                            <span class="access-level">${perm.access_level}</span>
+                        </div>
+                        <small>Granted by ${escapeHtml(perm.granted_by)} on ${new Date(perm.granted_at).toLocaleDateString()}</small>
+                    </div>
+                `).join('');
+            }
+
+            permissionsModal.style.display = 'block';
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    });
+
+    // Grant access functionality
+    document.getElementById('grantAccessBtn').addEventListener('click', () => {
+        document.getElementById('grantAccessForm').style.display = 'block';
+    });
+
+    document.getElementById('grantPermissionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            await foldersApi.grantPermission(currentFolderId, data);
+            document.getElementById('grantAccessForm').style.display = 'none';
+            e.target.reset();
+            // Refresh permissions display
+            document.getElementById('manageFolderPermissionsBtn').click();
+            showMessage('Access granted successfully', 'success');
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    });
+
+    // Tab functionality
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabName = btn.dataset.tab;
+
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        });
+    });
+
+    function showMessage(message, type = 'info') {
+        // Simple message display - in a real app you'd want a proper notification system
+        const existing = document.querySelector('.temp-message');
+        if (existing) existing.remove();
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `temp-message ${type}`;
+        messageDiv.textContent = message;
+        messageDiv.style.cssText = `
+            position: fixed; top: 20px; right: 20px; z-index: 10000;
+            padding: 12px 20px; border-radius: 4px; color: white;
+            background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+        `;
+
+        document.body.appendChild(messageDiv);
+        setTimeout(() => messageDiv.remove(), 3000);
+    }
+});
+</script>
+{% endblock %}
