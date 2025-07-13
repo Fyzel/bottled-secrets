@@ -25,7 +25,7 @@ from typing import Set, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 
-__all__ = ['UserRole', 'Permission', 'RoleManager', 'UserPermissions']
+__all__ = ["UserRole", "Permission", "RoleManager", "UserPermissions"]
 
 
 class UserRole(Enum):
@@ -38,13 +38,13 @@ class UserRole(Enum):
     :cvar GUEST: Limited access user
     :type GUEST: str
     """
-    
+
     USER_ADMINISTRATOR = "user_administrator"
     REGULAR_USER = "regular_user"
     GUEST = "guest"
 
     @classmethod
-    def get_all_roles(cls) -> List['UserRole']:
+    def get_all_roles(cls) -> List["UserRole"]:
         """Get list of all available roles.
 
         :returns: List of all user roles
@@ -53,7 +53,7 @@ class UserRole(Enum):
         return list(cls)
 
     @classmethod
-    def get_role_display_name(cls, role: 'UserRole') -> str:
+    def get_role_display_name(cls, role: "UserRole") -> str:
         """Get human-readable display name for role.
 
         :param role: User role to get display name for
@@ -64,9 +64,9 @@ class UserRole(Enum):
         display_names = {
             cls.USER_ADMINISTRATOR: "User Administrator",
             cls.REGULAR_USER: "Regular User",
-            cls.GUEST: "Guest User"
+            cls.GUEST: "Guest User",
         }
-        return display_names.get(role, role.value.replace('_', ' ').title())
+        return display_names.get(role, role.value.replace("_", " ").title())
 
 
 class Permission(Enum):
@@ -82,13 +82,16 @@ class Permission(Enum):
     :type VIEW_USER_LIST: str
     :cvar ACCESS_SECRETS: Access secret management features
     :type ACCESS_SECRETS: str
+    :cvar MANAGE_SECRETS: Create, update, delete secrets and folders
+    :type MANAGE_SECRETS: str
     """
-    
+
     MANAGE_USERS = "manage_users"
     MANAGE_ROLES = "manage_roles"
     VIEW_ADMIN_PANEL = "view_admin_panel"
     VIEW_USER_LIST = "view_user_list"
     ACCESS_SECRETS = "access_secrets"
+    MANAGE_SECRETS = "manage_secrets"
 
 
 @dataclass
@@ -104,7 +107,7 @@ class UserPermissions:
     :ivar assigned_at: Timestamp when roles were assigned
     :type assigned_at: datetime
     """
-    
+
     roles: Set[UserRole] = field(default_factory=set)
     permissions: Set[Permission] = field(default_factory=set)
     assigned_by: Optional[str] = None
@@ -183,12 +186,11 @@ class RoleManager:
             Permission.MANAGE_ROLES,
             Permission.VIEW_ADMIN_PANEL,
             Permission.VIEW_USER_LIST,
-            Permission.ACCESS_SECRETS
+            Permission.ACCESS_SECRETS,
+            Permission.MANAGE_SECRETS,
         },
-        UserRole.REGULAR_USER: {
-            Permission.ACCESS_SECRETS
-        },
-        UserRole.GUEST: set()  # No permissions for guests
+        UserRole.REGULAR_USER: {Permission.ACCESS_SECRETS, Permission.MANAGE_SECRETS},
+        UserRole.GUEST: set(),  # No permissions for guests
     }
 
     @classmethod
@@ -215,7 +217,9 @@ class RoleManager:
         return all_permissions
 
     @classmethod
-    def can_assign_role(cls, assigner_roles: Set[UserRole], target_role: UserRole) -> bool:
+    def can_assign_role(
+        cls, assigner_roles: Set[UserRole], target_role: UserRole
+    ) -> bool:
         """Check if user with given roles can assign a target role.
 
         :param assigner_roles: Roles of the user attempting to assign
@@ -234,7 +238,7 @@ class RoleManager:
         assigner_email: str,
         assigner_roles: Set[UserRole],
         target_email: str,
-        target_role: UserRole
+        target_role: UserRole,
     ) -> tuple[bool, str]:
         """Validate a role assignment operation.
 
@@ -254,8 +258,10 @@ class RoleManager:
             return False, "Insufficient permissions to assign roles"
 
         # Prevent self-assignment of User Administrator role
-        if (assigner_email == target_email and 
-            target_role == UserRole.USER_ADMINISTRATOR):
+        if (
+            assigner_email == target_email
+            and target_role == UserRole.USER_ADMINISTRATOR
+        ):
             return False, "Cannot assign User Administrator role to yourself"
 
         # Validate target role exists
