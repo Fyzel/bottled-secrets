@@ -20,10 +20,17 @@ import os
 from typing import Dict, Type
 from dotenv import load_dotenv
 
-__all__ = ['Config', 'DevelopmentConfig', 'ProductionConfig', 'TestingConfig', 'CONFIG_MAP']
+
+__all__ = [
+    "Config",
+    "DevelopmentConfig",
+    "ProductionConfig",
+    "TestingConfig",
+    "CONFIG_MAP",
+]
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(BASEDIR, '.env'))
+load_dotenv(os.path.join(BASEDIR, ".env"))
 
 
 class Config:
@@ -46,13 +53,22 @@ class Config:
             class CustomConfig(Config):
                 DEBUG = True
     """
-    
-    SECRET_KEY: str = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    DATABASE_URL: str = os.environ.get('DATABASE_URL') or \
-        'mysql+pymysql://user:password@localhost:3306/bottled_secrets'
-    
+
+    SECRET_KEY: str = (
+        os.environ.get("SECRET_KEY") or "dev-secret-key-change-in-production"
+    )
+    SQLALCHEMY_DATABASE_URI: str = (
+        os.environ.get("DATABASE_URL") or "sqlite:///bottled_secrets.db"
+    )
+    SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
+
     # Debug mode should be controlled by environment variables, not hardcoded
-    DEBUG: bool = os.environ.get('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes', 'on')
+    DEBUG: bool = os.environ.get("FLASK_DEBUG", "").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
 
 
 class DevelopmentConfig(Config):
@@ -64,9 +80,14 @@ class DevelopmentConfig(Config):
     :cvar DEBUG: Enable debug mode for development (can be overridden by FLASK_DEBUG)
     :type DEBUG: bool
     """
-    
+
     # Default to debug mode in development, but allow environment override
-    DEBUG: bool = os.environ.get('FLASK_DEBUG', 'true').lower() in ('1', 'true', 'yes', 'on')
+    DEBUG: bool = os.environ.get("FLASK_DEBUG", "true").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
 
 
 class ProductionConfig(Config):
@@ -78,7 +99,7 @@ class ProductionConfig(Config):
     :cvar DEBUG: Debug mode disabled for production security
     :type DEBUG: bool
     """
-    
+
     # Production should never have debug mode enabled for security
     DEBUG: bool = False
 
@@ -91,17 +112,17 @@ class TestingConfig(Config):
 
     :cvar TESTING: Enable testing mode
     :type TESTING: bool
-    :cvar DATABASE_URL: In-memory SQLite database for testing
-    :type DATABASE_URL: str
+    :cvar SQLALCHEMY_DATABASE_URI: In-memory SQLite database for testing
+    :type SQLALCHEMY_DATABASE_URI: str
     """
-    
+
     TESTING: bool = True
-    DATABASE_URL: str = 'sqlite:///:memory:'
+    SQLALCHEMY_DATABASE_URI: str = "sqlite:///:memory:"
 
 
 CONFIG_MAP: Dict[str, Type[Config]] = {
-    'development': DevelopmentConfig,
-    'production': ProductionConfig,
-    'testing': TestingConfig,
-    'default': DevelopmentConfig
+    "development": DevelopmentConfig,
+    "production": ProductionConfig,
+    "testing": TestingConfig,
+    "default": DevelopmentConfig,
 }
