@@ -2,7 +2,23 @@
 
 {% block content %}
 <div class="hero">
+    <div class="hero-logo">
+        <img src="{{ url_for('static', filename='images/Bottled-Secrets.png') }}" alt="Bottled Secrets" class="hero-logo-image">
+    </div>
     <h1>Welcome to Bottled Secrets</h1>
-    <p>A secure Flask application for managing secrets</p>
+    <p>A secure Flask application for managing secrets with hierarchical folder organization</p>
+    {% if not session.authenticated %}
+        <div class="hero-actions">
+            <a href="{{ url_for('auth.login', provider='google') }}" class="btn btn-primary btn-lg">
+                Sign In with Google
+            </a>
+        </div>
+    {% else %}
+        <div class="hero-actions">
+            <a href="{{ url_for('folders.index') }}" class="btn btn-primary btn-lg">
+                Access Secret Folders
+            </a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
