@@ -14,7 +14,7 @@ python-dotenv==1.1.1
 SQLAlchemy==2.0.41
 Flask-SQLAlchemy==3.1.1
 PyMySQL==1.1.1
-mariadb==1.1.12
+mariadb==1.1.13
 
 # Security
 cryptography==45.0.5
