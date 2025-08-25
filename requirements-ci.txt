@@ -14,7 +14,7 @@ itsdangerous==2.2.0
 python-dotenv==1.1.1
 
 # Database (SQLAlchemy and PyMySQL only - excluding mariadb)
-SQLAlchemy==2.0.41
+SQLAlchemy==2.0.43
 Flask-SQLAlchemy==3.1.1
 PyMySQL==1.1.1
 
