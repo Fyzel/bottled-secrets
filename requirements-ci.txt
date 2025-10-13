@@ -19,7 +19,7 @@ Flask-SQLAlchemy==3.1.1
 PyMySQL==1.1.1
 
 # Development tools for linting
-pylint==3.3.7
+pylint==4.0.0
 pylint-flask==0.6
 black==25.1.0
 isort==6.0.1
