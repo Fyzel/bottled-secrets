@@ -36,4 +36,4 @@ coverage==7.11.0
 # Pre-commit hooks (existing)
 pre_commit_hooks==6.0.0
 ruamel.yaml==0.18.14
-ruamel.yaml.clib==0.2.12
+ruamel.yaml.clib==0.2.15
